@@ -1,212 +1,173 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { logout } from "../services/authService"
-import toast from "react-hot-toast"
-import axios from "axios"
-import { useAuth } from "../context/useAuth"
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { logout } from "../services/authService";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { useAuth } from "../context/useAuth";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const navigate = useNavigate()
-  const [isLoading, setIsLoading] = useState(false)
-  const { isLoggedIn, logout: unauthenticate } = useAuth()
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isLoggedIn, logout: unauthenticate } = useAuth();
 
-  console.log(isLoggedIn)
-
-  const handleLogin = () => {
-    console.log("Login")
-    navigate("/login")
-  }
+  const navLinks = [
+    { label: "Books", path: "/books" },
+    { label: "Readers", path: "/readers" },
+    { label: "Lending", path: "/lending" },
+    { label: "Overdue", path: "/overdue" },
+    { label: "Dashboard", path: "/dashboard" },
+  ];
 
   const handleLogout = async () => {
-    setIsLoading(true)
+    if (isLoading) return;
+    setIsLoading(true);
     try {
-      await logout()
-      toast.success("Logout successful!")
-      unauthenticate()
-      navigate("/login") // <-- navigate to login on success
+      await logout();
+      unauthenticate();
+      toast.success("Logout successful!");
+      navigate("/login");
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.message)
-      } else {
-        toast.error("Something went wrong")
-      }
+      toast.error(
+          axios.isAxiosError(error)
+              ? error.message
+              : "Something went wrong"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleDashboard = () =>  navigate("/dashboard")
-  const handleBooks = () => navigate("/books")
-  const handleReaders = () => navigate("/readers")
-  const handleLending = () => navigate("/lending")
-  const handleOverdue = () => navigate("/overdue")
+  const toggleMenu = () => setIsMenuOpen((prev) => !prev);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen)
-  }
+  const isActive = (path: string) =>
+      location.pathname === path
+          ? "text-indigo-600 font-semibold"
+          : "text-gray-700 hover:text-indigo-600";
 
   return (
-    <nav className='bg-white shadow-lg border-b border-gray-200'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <div className='flex justify-between items-center h-16'>
-
-          {/* Logo Section */}
-          <div className='flex items-center cursor-pointer'>
-            <div className='flex-shrink-0'>
-              <h1 className='text-2xl font-bold text-indigo-600' onClick={handleDashboard}> 📚 Book-Club </h1>
-            </div>
-          </div>
-
-          {/* navigation */}
-          <div className='hidden md:flex items-center space-x-4'>
-            {isLoggedIn && (
-                <>
-                  <a
-                      onClick={handleBooks}
-                      className='text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium cursor-pointer'
-                  >
-                    Books
-                  </a>
-                  <a
-                      onClick={handleReaders}
-                      className='text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium cursor-pointer'
-                  >
-                    Readers
-                  </a>
-                  <a
-                      onClick={handleLending}
-                      className='text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium cursor-pointer'
-                  >
-                    Lending
-                  </a>
-                  <a
-                      onClick={handleOverdue}
-                      className='text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium cursor-pointer'
-                  >
-                    Overdue
-                  </a>
-                </>
-            )}
-
-            {!isLoggedIn && (
-                <button
-                    onClick={handleLogin}
-                    className='bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium'
-                >
-                  Login
-                </button>
-            )}
-
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className='hidden md:flex items-center space-x-4'>
-
-            {!isLoggedIn && (
-              <button
-                onClick={handleLogin}
-                className='bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-              >
-                Login
-              </button>
-            )}
-
-            {isLoggedIn && (
-              <button
-                onClick={handleLogout}
-                className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
-              >
-                Logout
-              </button>
-            )}
-
-            {isLoggedIn && (
-              <button
-                onClick={handleDashboard}
-                className='bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500'
-              >
-                Dashboard
-              </button>
-            )}
-
-
-          </div>
-
-          {/* Mobile menu button */}
-          <div className='md:hidden'>
-            <button
-              onClick={toggleMenu}
-              className='text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600'
+      <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div
+                className="text-2xl font-bold text-indigo-600 cursor-pointer"
             >
-              <svg className='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 6h16M4 12h16M4 18h16' />
-              </svg>
-            </button>
-          </div>
-        </div>
+              📚 Book-Club
+            </div>
 
-        {/* Mobile Navigation Menu */}
-        {isMenuOpen && (
-          <div className='md:hidden'>
-            <div className='px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200'>
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center space-x-4">
+              {isLoggedIn &&
+                  navLinks.map(({ label, path }) => (
+                      <button
+                          key={label}
+                          onClick={() => navigate(path)}
+                          className={`px-3 py-2 text-sm font-medium transition-colors duration-150 ${isActive(
+                              path
+                          )}`}
+                      >
+                        {label}
+                      </button>
+                  ))}
 
-              {isLoggedIn && (
-                  <>
-                    <a
-                        onClick={handleBooks}
-                        className='block w-full text-left text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-base font-medium cursor-pointer'
-                    >
-                      Books
-                    </a>
-                    <a
-                        onClick={handleReaders}
-                        className='block w-full text-left text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-base font-medium cursor-pointer'
-                    >
-                      Readers
-                    </a>
-                    <a
-                        onClick={handleLending}
-                        className='block w-full text-left text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-base font-medium cursor-pointer'
-                    >
-                      Lending
-                    </a>
-                  </>
-              )}
-
-              {!isLoggedIn && (
-                <button
-                  onClick={handleLogin}
-                  className='block w-full text-left bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md text-base font-medium'
-                >
-                  Login
-                </button>
-              )}
-
-              {isLoggedIn && (
-                <button
-                  disabled={isLoading}
-                  onClick={handleLogout}
-                  className='block w-full text-left bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-base font-medium'
-                >
-                  {isLoading ? "Logging out..." : "Logout"}
-                </button>
-              )}
-
-              {isLoggedIn && (
-                <button
-                  onClick={handleDashboard}
-                  className='block w-full text-left bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-base font-medium'
-                >
-                  Dashboard
-                </button>
+              {!isLoggedIn ? (
+                  <button
+                      onClick={() => navigate("/login")}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Login
+                  </button>
+              ) : (
+                  <button
+                      onClick={handleLogout}
+                      disabled={isLoading}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    {isLoading ? "Logging out..." : "Logout"}
+                  </button>
               )}
             </div>
-          </div>
-        )}
-      </div>
-    </nav>
-  )
-}
 
-export default Navbar
+            {/* Mobile Toggle */}
+            <div className="md:hidden">
+              <button
+                  onClick={toggleMenu}
+                  className="text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                  {isMenuOpen ? (
+                      <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                      />
+                  ) : (
+                      <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 6h16M4 12h16M4 18h16"
+                      />
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+              <div className="md:hidden mt-2 pb-3 space-y-1 border-t border-gray-200">
+                {isLoggedIn &&
+                    navLinks.map(({ label, path }) => (
+                        <button
+                            key={label}
+                            onClick={() => {
+                              navigate(path);
+                              setIsMenuOpen(false);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-base font-medium ${isActive(
+                                path
+                            )}`}
+                        >
+                          {label}
+                        </button>
+                    ))}
+
+                {!isLoggedIn ? (
+                    <button
+                        onClick={() => {
+                          navigate("/login");
+                          setIsMenuOpen(false);
+                        }}
+                        className="block w-full text-left bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-base font-medium"
+                    >
+                      Login
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsMenuOpen(false);
+                        }}
+                        disabled={isLoading}
+                        className="block w-full text-left bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-base font-medium"
+                    >
+                      {isLoading ? "Logging out..." : "Logout"}
+                    </button>
+                )}
+              </div>
+          )}
+        </div>
+      </nav>
+  );
+};
+
+export default Navbar;
